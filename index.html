@@ -15,14 +15,13 @@
             background-image: url('background.png'); 
             background-size: cover; background-position: center;
             position: relative; display: block;
-            /* ПРАВКА 1: Время приближения увеличено до 40 секунд (было 20s) */
-            transition: transform 40s ease-in-out; 
-            transform-origin: 75% 65%; /* Точка приближения (примерно где часы) */
+            /* Камера движется очень медленно — 60 секунд */
+            transition: transform 60s linear; 
+            transform-origin: 75% 65%; 
         }
 
-        /* Класс для активации зума */
         .zoom-active {
-            transform: scale(3.5);
+            transform: scale(4);
         }
 
         #clock-display {
@@ -35,14 +34,14 @@
             text-shadow: 0 0 12px rgba(255, 0, 0, 1);
             transform: skewX(-10deg) rotate(-0.5deg); 
             letter-spacing: 5px; opacity: 0.95;
-            text-align: center; /* Центрирование текста внутри */
+            text-align: center;
         }
 
-        /* ПРАВКА 2: Специальный стиль для финального кода, чтобы уменьшить расстояние между строками */
+        /* Минимальное расстояние между строками кода */
         .final-code {
-            font-size: 2.2vw; /* Немного уменьшим шрифт, чтобы код влез */
-            line-height: 0.8; /* Уменьшаем межстрочный интервал (норма = 1 или 1.2) */
-            letter-spacing: 2px; /* Чуть меньше расстояние между буквами для компактности */
+            font-size: 2.2vw; 
+            line-height: 0.65; /* Еще плотнее */
+            letter-spacing: 1px;
         }
 
         .active-clock { animation: pulse 0.1s infinite alternate; }
@@ -83,7 +82,6 @@
             font-family: 'Courier New', monospace; 
             font-size: 5vw; 
             letter-spacing: 10px;
-            line-height: 1.2; /* Здесь на черном экране можно оставить стандартное расстояние */
         }
     </style>
 </head>
@@ -111,10 +109,8 @@
 
     <script>
         const clockSpans = [
-            document.getElementById('c1'),
-            document.getElementById('c2'),
-            document.getElementById('c3'),
-            document.getElementById('c4')
+            document.getElementById('c1'), document.getElementById('c2'),
+            document.getElementById('c3'), document.getElementById('c4')
         ];
         const clockContainer = document.getElementById('clock-display');
         const clockText = document.getElementById('clock-text');
@@ -128,9 +124,7 @@
         let activeIndices = [];
         let isCodeTime = false;
         
-        // Код, разбитый на две строки для циферблата (HTML перенос <br>)
         const codeDigitsHtml = "6-9-14-1-12<br>12-9-22-5";
-        // Код для черного экрана (можно оставить с пробелом или тоже разбить)
         const codeDigitsPlain = "6-9-14-1-12 12-9-22-5";
 
         document.getElementById('start-btn').addEventListener('click', () => {
@@ -141,10 +135,8 @@
                 bootOverlay.style.display = 'none';
                 audio.play();
                 
-                // ПРАВКА 1: Приближение камеры (теперь длится 40 секунд согласно CSS)
                 scene.classList.add('zoom-active');
 
-                // Появление цифр
                 const order = [0, 2, 1, 3];
                 order.forEach((pos, i) => {
                     setTimeout(() => {
@@ -155,27 +147,31 @@
                     }, i * 400);
                 });
 
-                // Событие на 15-й секунде (Код на циферблате)
+                // 15 сек: Код на циферблате
                 setTimeout(() => {
                     isCodeTime = true;
-                    // ПРАВКА 2: Применяем класс .final-code для уменьшения межстрочного интервала
                     clockText.classList.add('final-code');
                     clockText.innerHTML = codeDigitsHtml;
                 }, 15000);
 
-                // Событие на 17-й секунде (Черный экран)
+                // 17 сек: Появление черного экрана
                 setTimeout(() => {
                     message.innerText = codeDigitsPlain;
                     overlay.style.display = "flex";
+                    
+                    // Перезагрузка ЧЕРЕЗ 3 СЕКУНДЫ ПОСЛЕ появления экрана (итого 20 сек от старта)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+
                 }, 17000);
 
             }, 500);
         });
 
         const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        
         setInterval(() => {
-            if (isCodeTime) return; // Останавливаем рандом, если пора показывать код
+            if (isCodeTime) return;
             activeIndices.forEach(idx => {
                 clockSpans[idx].innerText = chars.charAt(Math.floor(Math.random() * chars.length));
             });
