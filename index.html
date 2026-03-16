@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Academy: Zero Delay</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: black;
+        }
+
+        #scene {
+            width: 100%; height: 100%;
+            background-image: url('background.png'); 
+            background-size: cover; background-position: center;
+            position: relative; display: block;
+            /* Плавный переход для эффекта приближения */
+            transition: transform 20s ease-in-out; 
+            transform-origin: 75% 65%; /* Точка приближения (примерно где часы) */
+        }
+
+        /* Класс для активации зума */
+        .zoom-active {
+            transform: scale(3.5);
+        }
+
+        #clock-display {
+            position: absolute;
+            bottom: 29.5%; right: 22.5%; width: 22%; height: 10%;    
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Arial Narrow', 'Impact', sans-serif; 
+            color: #ff0000; font-weight: 900; font-size: 5.5vw; 
+            text-transform: uppercase;
+            text-shadow: 0 0 12px rgba(255, 0, 0, 1);
+            transform: skewX(-10deg) rotate(-0.5deg); 
+            letter-spacing: 5px; opacity: 0.95;
+        }
+
+        .active-clock { animation: pulse 0.1s infinite alternate; }
+
+        @keyframes pulse {
+            from { opacity: 0.85; text-shadow: 0 0 12px red; }
+            to { opacity: 1; text-shadow: 0 0 18px red, 0 0 3px white; }
+        }
+
+        #noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10000; display: none; pointer-events: none;
+            background: url('https://media.giphy.com/media/oEI9uWU0EB9LpL6SAs/giphy.gif');
+            opacity: 0.3;
+        }
+
+        #boot-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        #start-btn {
+            padding: 20px 40px; background: transparent; color: #ff0000;
+            border: 2px solid #ff0000; font-family: 'Impact', sans-serif;
+            font-size: 1.5rem; cursor: pointer; text-transform: uppercase;
+        }
+
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; display: none; justify-content: center;
+            align-items: center; z-index: 9999; text-align: center;
+        }
+
+        .scary-text { color: white; font-family: 'Courier New', monospace; font-size: 5vw; letter-spacing: 10px; }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="fone.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="noise-overlay"></div>
+
+    <div id="boot-overlay">
+        <button id="start-btn">ENABLE SYSTEM CLOCK</button>
+    </div>
+
+    <div id="scene">
+        <div id="clock-display">
+            <div id="clock-text"><span id="c1">-</span><span id="c2">-</span>:<span id="c3">-</span><span id="c4">-</span></div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <div id="message" class="scary-text"></div>
+    </div>
+
+    <script>
+        const clockSpans = [
+            document.getElementById('c1'),
+            document.getElementById('c2'),
+            document.getElementById('c3'),
+            document.getElementById('c4')
+        ];
+        const clockContainer = document.getElementById('clock-display');
+        const clockText = document.getElementById('clock-text');
+        const audio = document.getElementById('bgMusic');
+        const bootOverlay = document.getElementById('boot-overlay');
+        const noise = document.getElementById('noise-overlay');
+        const scene = document.getElementById('scene');
+        const overlay = document.getElementById('overlay');
+        const message = document.getElementById('message');
+        
+        let activeIndices = [];
+        let isCodeTime = false;
+        const codeDigits = "6-9-14-1-12 12-9-22-5";
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            noise.style.display = 'block';
+            
+            setTimeout(() => {
+                noise.style.display = 'none';
+                bootOverlay.style.display = 'none';
+                audio.play();
+                
+                // Приближение камеры
+                scene.classList.add('zoom-active');
+
+                // Появление цифр
+                const order = [0, 2, 1, 3];
+                order.forEach((pos, i) => {
+                    setTimeout(() => {
+                        activeIndices.push(pos);
+                        if (activeIndices.length === 4) {
+                            clockContainer.classList.add('active-clock');
+                        }
+                    }, i * 400);
+                });
+
+                // Событие на 15-й секунде (Код на циферблате)
+                setTimeout(() => {
+                    isCodeTime = true;
+                    clockText.innerHTML = `<span style="font-size: 2.5vw;">${codeDigits}</span>`;
+                }, 15000);
+
+                // Событие на 17-й секунде (Черный экран)
+                setTimeout(() => {
+                    message.innerText = codeDigits;
+                    overlay.style.display = "flex";
+                }, 17000);
+
+            }, 500);
+        });
+
+        const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        
+        setInterval(() => {
+            if (isCodeTime) return; // Останавливаем рандом, если пора показывать код
+            activeIndices.forEach(idx => {
+                clockSpans[idx].innerText = chars.charAt(Math.floor(Math.random() * chars.length));
+            });
+        }, 120);
+
+        // Всплывающие фразы удалены (функция showScaryEvent стерта)
+    </script>
+</body>
+</html>
